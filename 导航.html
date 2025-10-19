@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科技导航界面</title>
+    <style>
+        /* 原有样式保持不变，添加管理员面板样式 */
+        
+        /* 管理员面板样式 */
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        
+        .admin-toggle {
+            background: linear-gradient(135deg, #ff6b6b, #9b5de5);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .admin-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .admin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .admin-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .admin-content {
+            background: linear-gradient(145deg, rgba(22, 60, 85, 0.95), rgba(15, 43, 64, 0.95));
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 168, 255, 0.2);
+        }
+        
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 168, 255, 0.3);
+        }
+        
+        .admin-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-tab.active {
+            color: #00d0ff;
+            border-bottom-color: #00d0ff;
+        }
+        
+        .admin-section {
+            display: none;
+        }
+        
+        .admin-section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            color: #00d0ff;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(0, 168, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(15, 43, 64, 0.7);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #00a8ff;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #00a8ff, #00d0ff);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.4);
+        }
+        
+        .button-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .button-item input {
+            flex: 1;
+        }
+        
+        .add-button {
+            background: linear-gradient(90deg, #06d6a0, #00d0ff);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .remove-button {
+            background: linear-gradient(90deg, #ff6b6b, #f15bb5);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .announcement-banner {
+            background: linear-gradient(90deg, #ff6b6b, #f15bb5, #fee440);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- 密码层 -->
+    <div id="lockScreen">
+        <div class="lockCard">
+            <div class="lockIcon">🔒</div>
+            <h2 style="color: #00d0ff; margin-bottom: 30px; text-shadow: 0 0 8px rgba(0, 208, 255, 0.5);">系统登录</h2>
+            
+            <div class="login-type">
+                <div class="login-tab active" data-tab="user">用户登录</div>
+                <div class="login-tab" data-tab="admin">管理员登录</div>
+            </div>
+            
+            <!-- 用户登录表单 -->
+            <div class="login-form active" id="userLogin">
+                <input type="password" class="lockInput" id="userPassword" placeholder="请输入用户密码">
+                <button class="lockBtn" id="userLoginBtn">登录</button>
+                <div class="password-info">
+                    用户密码每天随机生成并通过QQ群发布<br>
+                    请查看QQ群获取今日密码
+                </div>
+            </div>
+            
+            <!-- 管理员登录表单 -->
+            <div class="login-form" id="adminLogin">
+                <input type="text" class="lockInput" id="adminUsername" placeholder="管理员账号">
+                <input type="password" class="lockInput" id="adminPassword" placeholder="管理员密码">
+                <button class="lockBtn" id="adminLoginBtn">登录</button>
+                <div class="password-info">
+                    管理员账户需提前申请权限<br>
+                    忘记密码请联系系统管理员
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员面板 -->
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <button class="admin-toggle" id="adminToggle">管理员面板</button>
+    </div>
+
+    <!-- 公告横幅 -->
+    <div id="announcementBanner" class="announcement-banner" style="display: none;"></div>
+
+    <!-- 主界面 -->
+    <div class="card">
+        <!-- 顶部信息栏 -->
+        <div class="top-bar">
+            <div class="avatar-wrapper">
+                <img id="siteAvatar" src="" alt="头像" class="avatar">
+            </div>
+            <div class="time-date-container">
+                <div class="time" id="currentTime">00:00:00</div>
+                <div class="date" id="currentDate">2023年1月1日</div>
+            </div>
+        </div>
+
+        <!-- 标题 -->
+        <h1 class="title" id="siteTitle">科技导航中心</h1>
+
+        <!-- 按钮列表 -->
+        <div class="button-list" id="navButtons">
+            <!-- 导航按钮将通过JavaScript动态加载 -->
+        </div>
+
+        <!-- 底部状态点 -->
+        <div class="status-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- 管理员模态框 -->
+    <div class="admin-modal" id="adminModal">
+        <div class="admin-content">
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="basic">基本设置</button>
+                <button class="admin-tab" data-tab="buttons">导航按钮</button>
+                <button class="admin-tab" data-tab="announcement">发布公告</button>
+                <button class="admin-tab" data-tab="password">密码管理</button>
+            </div>
+            
+            <!-- 基本设置 -->
+            <div class="admin-section active" id="basicSection">
+                <div class="form-group">
+                    <label class="form-label">网站标题</label>
+                    <input type="text" class="form-input" id="siteTitleInput" placeholder="输入网站标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">头像URL</label>
+                    <input type="text" class="form-input" id="avatarUrlInput" placeholder="输入头像图片URL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">主题颜色</label>
+                    <input type="color" class="form-input" id="themeColorInput" value="#00a8ff">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="saveBasicSettings">保存设置</button>
+                    <button class="btn btn-secondary" id="closeAdminModal">关闭</button>
+                </div>
+            </div>
+            
+            <!-- 导航按钮管理 -->
+            <div class="admin-section" id="buttonsSection">
+                <div id="buttonsContainer">
+                    <!-- 按钮将通过JavaScript动态生成 -->
+                </div>
+                <button class="add-button" id="addButton">添加新按钮</button>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="saveButtons">保存按钮设置</button>
+                    <button class="btn btn-secondary" id="closeAdminModal2">关闭</button>
+                </div>
+            </div>
+            
+            <!-- 发布公告 -->
+            <div class="admin-section" id="announcementSection">
+                <div class="form-group">
+                    <label class="form-label">公告标题</label>
+                    <input type="text" class="form-input" id="announcementTitle" placeholder="输入公告标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">公告内容</label>
+                    <textarea class="form-input" id="announcementContent" placeholder="输入公告内容" rows="5"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="publishAnnouncement">发布公告</button>
+                    <button class="btn btn-secondary" id="closeAdminModal3">关闭</button>
+                </div>
+            </div>
+            
+            <!-- 密码管理 -->
+            <div class="admin-section" id="passwordSection">
+                <div class="form-group">
+                    <label class="form-label">今日密码</label>
+                    <input type="text" class="form-input" id="dailyPassword" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">新密码</label>
+                    <input type="text" class="form-input" id="newPassword" placeholder="输入新密码">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="updatePassword">更新密码</button>
+                    <button class="btn btn-secondary" id="closeAdminModal4">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // 全局变量
+        let adminToken = null;
+        let currentSettings = {};
+        let currentButtons = [];
+
+        // 初始化函数
+        async function init() {
+            await loadSettings();
+            await loadNavButtons();
+            await loadLatestAnnouncement();
+            initLoginSystem();
+            initDateTime();
+            createParticles();
+            initStatusDots();
+        }
+
+        // 加载系统设置
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/settings`);
+                currentSettings = await response.json();
+                
+                // 更新界面
+                document.getElementById('siteTitle').textContent = currentSettings.site_title || '科技导航中心';
+                document.getElementById('siteAvatar').src = currentSettings.avatar_url || 'http://glowguide.space/img/68f4b97844768.jpg';
+                
+                // 更新管理员面板中的设置
+                document.getElementById('siteTitleInput').value = currentSettings.site_title || '';
+                document.getElementById('avatarUrlInput').value = currentSettings.avatar_url || '';
+                document.getElementById('themeColorInput').value = currentSettings.theme_color || '#00a8ff';
+                document.getElementById('dailyPassword').value = currentSettings.daily_password || '';
+            } catch (error) {
+                console.error('加载设置失败:', error);
+            }
+        }
+
+        // 加载导航按钮
+        async function loadNavButtons() {
+            try {
+                const response = await fetch(`${API_BASE}/nav-buttons`);
+                currentButtons = await response.json();
+                renderNavButtons();
+                renderAdminButtons();
+            } catch (error) {
+                console.error('加载导航按钮失败:', error);
+            }
+        }
+
+        // 渲染导航按钮
+        function renderNavButtons() {
+            const container = document.getElementById('navButtons');
+            container.innerHTML = '';
+            
+            currentButtons.forEach(button => {
+                const buttonEl = document.createElement('a');
+                buttonEl.href = button.url;
+                buttonEl.target = '_blank';
+                buttonEl.className = 'nav-btn';
+                buttonEl.innerHTML = `
+                    <span class="btn-number">${button.number}</span>
+                    <span class="btn-text">${button.text}</span>
+                `;
+                container.appendChild(buttonEl);
+            });
+        }
+
+        // 渲染管理员面板中的按钮
+        function renderAdminButtons() {
+            const container = document.getElementById('buttonsContainer');
+            container.innerHTML = '';
+            
+            currentButtons.forEach((button, index) => {
+                const buttonEl = document.createElement('div');
+                buttonEl.className = 'button-item';
+                buttonEl.innerHTML = `
+                    <input type="text" class="form-input" value="${button.number}" placeholder="序号" data-field="number">
+                    <input type="text" class="form-input" value="${button.text}" placeholder="按钮文字" data-field="text">
+                    <input type="text" class="form-input" value="${button.url}" placeholder="跳转链接" data-field="url">
+                    <button class="remove-button" data-index="${index}">删除</button>
+                `;
+                container.appendChild(buttonEl);
+            });
+            
+            // 添加删除按钮事件
+            document.querySelectorAll('.remove-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    currentButtons.splice(index, 1);
+                    renderAdminButtons();
+                });
+            });
+        }
+
+        // 加载最新公告
+        async function loadLatestAnnouncement() {
+            try {
+                const response = await fetch(`${API_BASE}/announcements/latest`);
+                const announcement = await response.json();
+                
+                if (announcement) {
+                    const banner = document.getElementById('announcementBanner');
+                    banner.textContent = `📢 ${announcement.title}: ${announcement.content}`;
+                    banner.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('加载公告失败:', error);
+            }
+        }
+
+        // 初始化登录系统
+        function initLoginSystem() {
+            const lockScreen = document.getElementById('lockScreen');
+            const loginTabs = document.querySelectorAll('.login-tab');
+            const loginForms = document.querySelectorAll('.login-form');
+            const userLoginBtn = document.getElementById('userLoginBtn');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            
+            // 切换登录类型
+            loginTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabType = tab.getAttribute('data-tab');
+                    
+                    loginTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    loginForms.forEach(form => form.classList.remove('active'));
+                    document.getElementById(`${tabType}Login`).classList.add('active');
+                });
+            });
+            
+            // 用户登录
+            userLoginBtn.addEventListener('click', async () => {
+                const password = document.getElementById('userPassword').value;
+                
+                if (password === currentSettings.daily_password) {
+                    lockScreen.classList.add('hide');
+                    setTimeout(() => lockScreen.style.display = 'none', 500);
+                } else {
+                    alert('密码错误！请检查今日密码是否正确。');
+                }
+            });
+            
+            // 管理员登录
+            adminLoginBtn.addEventListener('click', async () => {
+                const username = document.getElementById('adminUsername').value;
+                const password = document.getElementById('adminPassword').value;
+                
+                try {
+                    const response = await fetch(`${API_BASE}/admin/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        adminToken = result.token;
+                        lockScreen.classList.add('hide');
+                        setTimeout(() => {
+                            lockScreen.style.display = 'none';
+                            document.getElementById('adminPanel').style.display = 'block';
+                        }, 500);
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    alert('登录失败，请检查网络连接');
+                }
+            });
+            
+            // 按Enter键登录
+            document.getElementById('userPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') userLoginBtn.click();
+            });
+            
+            document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') adminLoginBtn.click();
+            });
+        }
+
+        // 初始化管理员面板
+        function initAdminPanel() {
+            const adminToggle = document.getElementById('adminToggle');
+            const adminModal = document.getElementById('adminModal');
+            const adminTabs = document.querySelectorAll('.admin-tab');
+            const adminSections = document.querySelectorAll('.admin-section');
+            
+            // 切换标签页
+            adminTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    adminTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    adminSections.forEach(section => section.classList.remove('active'));
+                    document.getElementById(`${tabId}Section`).classList.add('active');
+                });
+            });
+            
+            // 打开管理员面板
+            adminToggle.addEventListener('click', () => {
+                adminModal.classList.add('active');
+            });
+            
+            // 关闭管理员面板
+            document.querySelectorAll('#closeAdminModal, #closeAdminModal2, #closeAdminModal3, #closeAdminModal4').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    adminModal.classList.remove('active');
+                });
+            });
+            
+            // 保存基本设置
+            document.getElementById('saveBasicSettings').addEventListener('click', async () => {
+                const settings = {
+                    site_title: document.getElementById('siteTitleInput').value,
+                    avatar_url: document.getElementById('avatarUrlInput').value,
+                    theme_color: document.getElementById('themeColorInput').value
+                };
+                
+                await updateSettings(settings);
+            });
+            
+            // 添加新按钮
+            document.getElementById('addButton').addEventListener('click', () => {
+                currentButtons.push({
+                    number: '',
+                    text: '',
+                    url: ''
+                });
+                renderAdminButtons();
+            });
+            
+            // 保存按钮设置
+            document.getElementById('saveButtons').addEventListener('click', async () => {
+                // 收集按钮数据
+                const buttons = [];
+                document.querySelectorAll('.button-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input');
+                    buttons.push({
+                        number: inputs[0].value,
+                        text: inputs[1].value,
+                        url: inputs[2].value
+                    });
+                });
+                
+                await updateNavButtons(buttons);
+            });
+            
+            // 发布公告
+            document.getElementById('publishAnnouncement').addEventListener('click', async () => {
+                const title = document.getElementById('announcementTitle').value;
+                const content = document.getElementById('announcementContent').value;
+                
+                if (!title || !content) {
+                    alert('请填写公告标题和内容');
+                    return;
+                }
+                
+                await publishAnnouncement(title, content);
+            });
+            
+            // 更新密码
+            document.getElementById('updatePassword').addEventListener('click', async () => {
+                const newPassword = document.getElementById('newPassword').value;
+                
+                if (!newPassword) {
+                    alert('请输入新密码');
+                    return;
+                }
+                
+                await updateSettings({ daily_password: newPassword });
+                document.getElementById('newPassword').value = '';
+            });
+        }
+
+        // API调用函数
+        async function updateSettings(settings) {
+            try {
+                const response = await fetch(`${API_BASE}/settings/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ settings })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('设置更新成功');
+                    await loadSettings();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('更新失败，请检查网络连接');
+            }
+        }
+
+        async function updateNavButtons(buttons) {
+            try {
+                const response = await fetch(`${API_BASE}/nav-buttons/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ buttons })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('按钮更新成功');
+                    await loadNavButtons();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('更新失败，请检查网络连接');
+            }
+        }
+
+        async function publishAnnouncement(title, content) {
+            try {
+                const response = await fetch(`${API_BASE}/announcements/publish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('公告发布成功');
+                    document.getElementById('announcementTitle').value = '';
+                    document.getElementById('announcementContent').value = '';
+                    await loadLatestAnnouncement();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('发布失败，请检查网络连接');
+            }
+        }
+
+        // 其他辅助函数（createParticles, initDateTime, initStatusDots等）
+        function createParticles() {
+            // 粒子效果实现...
+        }
+
+        function initDateTime() {
+            // 时间日期更新...
+        }
+
+        function initStatusDots() {
+            // 状态点动画...
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            initAdminPanel();
+        });
+    </script>
+</body>
+  </html>
